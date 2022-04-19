@@ -33,6 +33,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       comment: {
         type: DataTypes.TEXT,
+        allowNull: false,
         validate: {
           notNull: { msg: "Comment is required" },
           notEmpty: { msg: "Comment is required" },
