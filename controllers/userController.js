@@ -1,7 +1,7 @@
 const { User } = require("../models/index");
 const secret = process.env.SECRET_KEY;
 const { comparePassword } = require("../helpers/bcrypt");
-const convertPayloadToToken = require("../helpers/jwt");
+const { convertPayloadToToken } = require("../helpers/jwt");
 
 class userController {
   static async register(req, res, next) {

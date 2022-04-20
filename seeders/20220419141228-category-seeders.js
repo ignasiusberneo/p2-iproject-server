@@ -16,7 +16,7 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
      */
-    await queryInterface.bulkInsert("Categoires", data);
+    await queryInterface.bulkInsert("Categories", data);
   },
 
   async down(queryInterface, Sequelize) {

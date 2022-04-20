@@ -5,4 +5,8 @@ function convertPayloadToToken(payload) {
   return jwt.sign(payload, secret);
 }
 
-module.exports = convertPayloadToToken;
+function convertTokenToPayload(token) {
+  return jwt.verify(token, secret);
+}
+
+module.exports = { convertPayloadToToken, convertTokenToPayload };
