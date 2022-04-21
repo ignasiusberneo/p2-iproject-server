@@ -13,11 +13,10 @@ const youtubeKey = process.env.YOUTUBE_KEY;
 class dramaController {
   static async getDramas(req, res, next) {
     try {
-      let { page, name } = req.query;
+      let { page } = req.query;
       if (!page) {
         page = 1;
       }
-      console.log(name);
       const size = 8;
       let options = {
         order: [["totalWatchlist", "DESC"]],
@@ -34,11 +33,6 @@ class dramaController {
           exclude: ["createdAt", "updatedAt"],
         },
       };
-      if (name) {
-        options.where.title = {
-          [Op.iLike]: `%${name}%`,
-        };
-      }
       const response = await Drama.findAndCountAll(options);
       res.status(200).json({
         data: response.rows,
@@ -46,6 +40,22 @@ class dramaController {
       });
     } catch (err) {
       console.log(err);
+      res.status(500).json({
+        message: "Internal Server Error",
+      });
+    }
+  }
+  static async getOmdb(req, res, next) {
+    try {
+      let { keyword } = req.body;
+      console.log(keyword);
+      keyword = keyword.replace(" ", "+");
+      const response = await axios.get(
+        `http://www.omdbapi.com/?t=${keyword}&apikey=1fcad470`
+      );
+      console.log(response.data);
+      res.status(200).json(response.data);
+    } catch (err) {
       res.status(500).json({
         message: "Internal Server Error",
       });
