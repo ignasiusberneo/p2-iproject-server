@@ -7,17 +7,19 @@ const {
 } = require("../models/index");
 const axios = require("axios");
 const { application } = require("express");
+const { Op } = require("sequelize");
 const youtubeKey = process.env.YOUTUBE_KEY;
 
 class dramaController {
   static async getDramas(req, res, next) {
     try {
-      let { page } = req.query;
+      let { page, name } = req.query;
       if (!page) {
         page = 1;
       }
-      const size = 9;
-      const response = await Drama.findAndCountAll({
+      console.log(name);
+      const size = 8;
+      let options = {
         order: [["totalWatchlist", "DESC"]],
         include: {
           model: Category,
@@ -31,7 +33,13 @@ class dramaController {
         attributes: {
           exclude: ["createdAt", "updatedAt"],
         },
-      });
+      };
+      if (name) {
+        options.where.title = {
+          [Op.iLike]: `%${name}%`,
+        };
+      }
+      const response = await Drama.findAndCountAll(options);
       res.status(200).json({
         data: response.rows,
         totalPage: Math.ceil(response.count / size),
@@ -47,6 +55,7 @@ class dramaController {
     try {
       const { dramaId } = req.params;
       const response = await Drama.findOne({
+        include: Category,
         where: {
           id: dramaId,
         },
@@ -72,11 +81,10 @@ class dramaController {
           DramaId: dramaId,
         },
       });
-      console.log(youtubeUrl.data);
       res.status(200).json({
         data: response,
         comments,
-        youtubeUrl: `https://www.youtube.com/watch?v=${youtubeUrl.data.items[0].id.videoId}`,
+        youtubeUrl: `https://www.youtube.com/embed/${youtubeUrl.data.items[0].id.videoId}`,
       });
     } catch (err) {
       if (err.name === "NOT_FOUND") {
@@ -105,9 +113,15 @@ class dramaController {
         message: "Add comment success",
       });
     } catch (err) {
-      res.status(500).json({
-        message: "Internal Server Error",
-      });
+      if (err.name === "SequelizeValidationError") {
+        res.status(400).json({
+          message: err.errors[0].message,
+        });
+      } else {
+        res.status(500).json({
+          message: "Internal Server Error",
+        });
+      }
     }
   }
   static async addWatchlist(req, res, next) {
@@ -150,6 +164,21 @@ class dramaController {
           message: "Internal Server Error",
         });
       }
+    }
+  }
+  static async getWatchlist(req, res, next) {
+    try {
+      const response = await Watchlist.findAll({
+        include: Drama,
+        where: {
+          UserId: req.user.id,
+        },
+      });
+      res.status(200).json(response);
+    } catch (err) {
+      res.status(500).json({
+        message: "Internal Server Error",
+      });
     }
   }
 }
